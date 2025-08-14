@@ -20,7 +20,9 @@ phases:
       - docker push 743808052586.dkr.ecr.ap-south-1.amazonaws.com/$IMAGE_NAME:latest
       - echo Writing image definitions file...
       - printf '[{"name":"%s","imageUri":"%s"}]' "$IMAGE_NAME" "743808052586.dkr.ecr.ap-south-1.amazonaws.com/$IMAGE_NAME:latest" > imagedefinitions.json
+
 artifacts:
   files:
     - imagedefinitions.json
     - deployment.yaml
+

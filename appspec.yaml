@@ -1,0 +1,9 @@
+version: 0.0
+resources:
+  - myApp:
+      type: AWS::EKS::Application
+      properties:
+        name: brain-tasks-deployment
+        clusterName: brain-cluster
+        namespace: default
+        file: deployment.yaml
