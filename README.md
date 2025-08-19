@@ -19,3 +19,6 @@
 <img width="1914" height="969" alt="Miniproject1-19  CloudWatch logs report" src="https://github.com/user-attachments/assets/6b6dec81-3a2c-4b75-92a8-e15b8245b208" />
 <img width="1915" height="968" alt="Miniproject1-18  CodePipeline Successfully completed" src="https://github.com/user-attachments/assets/09f08b16-9b89-4d34-b658-9c805a2eaad5" />
 <img width="1915" height="969" alt="Miniproject1-17  Codebuild success" src="https://github.com/user-attachments/assets/8099716a-595d-4c95-a94d-04fbe0e9bc3e" />
+
+Application deployed kubernetes Loadbalancer ARN.
+http://a9a76a594a6f245c0bbca86d544f71cb-1686172190.ap-south-1.elb.amazonaws.com/
