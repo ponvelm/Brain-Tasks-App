@@ -1,9 +1,23 @@
 version: 0.0
-Resources:
-  - myEKSDeployment:
-      Type: AWS::EKS::Application
-      Properties:
-        Name: "brain-tasks-deployment"
-        ClusterName: "brain-cluster"
-        Namespace: "default"
-        FileName: "deployment.yaml"
+os: linux
+files:
+  - source: /
+    destination: /tmp/deploy
+
+hooks:
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      timeout: 300
+      runas: ec2-user
+  AfterInstall:
+    - location: scripts/after_install.sh
+      timeout: 300
+      runas: ec2-user
+  ApplicationStart:
+    - location: scripts/start_application.sh
+      timeout: 300
+      runas: ec2-user
+  ValidateService:
+    - location: scripts/validate_service.sh
+      timeout: 300
+      runas: ec2-user
