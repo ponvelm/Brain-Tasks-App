@@ -1,0 +1,9 @@
+version: 0.0
+Resources:
+  - myEKSDeployment:
+      Type: AWS::EKS::Application
+      Properties:
+        Name: "brain-tasks-deployment"
+        ClusterName: "brain-cluster"
+        Namespace: "default"
+        FileName: "deployment.yaml"
