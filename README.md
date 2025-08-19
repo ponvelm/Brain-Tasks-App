@@ -22,3 +22,158 @@
 
 Application deployed kubernetes Loadbalancer ARN.
 http://a9a76a594a6f245c0bbca86d544f71cb-1686172190.ap-south-1.elb.amazonaws.com/
+
+**Include setup instructions**
+
+✅ 1. Clone the Application
+git clone https://github.com/Vennilavan12/Brain-Tasks-App.git
+cd Brain-Tasks-App
+
+✅ 2. Dockerize the Application
+
+Dockerfile (if not already present):
+
+# Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+RUN npm install
+RUN npm run build
+EXPOSE 3000
+CMD ["npx", "serve", "-s", "dist", "-l", "3000"]
+
+
+Build & Test Image Locally
+
+docker build -t brain-tasks-app .
+docker run -p 3000:3000 brain-tasks-app
+
+✅ 3. Push Image to AWS ECR
+aws ecr create-repository --repository-name brain-tasks-app
+aws ecr get-login-password | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.<region>.amazonaws.com
+
+docker tag brain-tasks-app:latest <aws_account_id>.dkr.ecr.<region>.amazonaws.com/brain-tasks-app:latest
+docker push <aws_account_id>.dkr.ecr.<region>.amazonaws.com/brain-tasks-app:latest
+
+✅ 4. Setup EKS Cluster
+
+Use Terraform or eksctl. Example with eksctl:
+
+eksctl create cluster --name brain-cluster --region <region> --nodegroup-name standard-workers --node-type t3.medium --nodes 2
+
+
+Verify:
+
+kubectl get nodes
+
+✅ 5. Create Kubernetes YAML Files
+
+deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: brain-tasks-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: brain-tasks
+  template:
+    metadata:
+      labels:
+        app: brain-tasks
+    spec:
+      containers:
+      - name: brain-tasks
+        image: <aws_account_id>.dkr.ecr.<region>.amazonaws.com/brain-tasks-app:latest
+        ports:
+        - containerPort: 3000
+
+
+service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: brain-tasks-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: brain-tasks
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+
+
+Apply with:
+
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+
+✅ 6. CodeBuild
+
+buildspec.yml
+
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo "Installing dependencies..."
+      - npm install
+  build:
+    commands:
+      - echo "Building the app..."
+      - npm run build
+      - echo "Building Docker image..."
+      - docker build -t brain-tasks-app .
+      - docker tag brain-tasks-app:latest <ecr_url>/brain-tasks-app:latest
+      - $(aws ecr get-login-password | docker login --username AWS --password-stdin <ecr_url>)
+      - docker push <ecr_url>/brain-tasks-app:latest
+artifacts:
+  files:
+    - '**/*'
+
+✅ 7. CodeDeploy
+
+appspec.yml
+
+version: 0.0
+Resources:
+  - myApp:
+      Type: AWS::EKS::Application
+      Properties:
+        TaskDefinition: deployment.yaml
+        LoadBalancerInfo:
+          ContainerName: brain-tasks
+          ContainerPort: 3000
+
+✅ 8. GitHub Integration
+
+Push your codebase with:
+
+git init
+git remote add origin https://github.com/your-username/Brain-Tasks-App.git
+git add .
+git commit -m "Initial commit"
+git push -u origin main
+
+✅ 9. CodePipeline Setup
+
+Source: GitHub (connect repo)
+
+Build: Use CodeBuild project
+
+Deploy: Choose EKS or AWS CodeDeploy with appspec.yml
+
+✅ 10. Monitoring with CloudWatch
+
+Use logs from CodeBuild, CodeDeploy, and Kubernetes pods:
+
+kubectl logs <pod-name>
+
+
+View in CloudWatch under /aws/codebuild/..., /aws/codedeploy/...
